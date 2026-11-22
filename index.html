@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Urban Auto — Калькулятор авто з США</title>
+  <meta name="description" content="Повна вартість авто з аукціону: купівля, логістика, митниця, ремонт і послуги Urban Auto." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2339a0ff'/%3E%3Ctext x='16' y='23' font-family='Arial' font-weight='800' font-size='20' text-anchor='middle' fill='%2307122b'%3EU%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="brand-mark">U</span> Urban Auto</div>
+    <p class="tagline">Калькулятор повної вартості авто з США</p>
+    <div class="modes" id="modeSwitch" role="tablist" aria-label="Країна доставки">
+      <button type="button" role="tab" data-mode="ua" class="on" aria-selected="true">🇺🇦 Україна</button>
+      <button type="button" role="tab" data-mode="eu" aria-selected="false">🇪🇺 Європа</button>
+    </div>
+  </header>
+
+  <main class="layout" id="uaView">
+    <section class="card lotbox" style="grid-column:1/-1">
+      <h2>Авто за посиланням <span class="tag">тільки Copart</span></h2>
+      <div class="lotline">
+        <input id="lotUrl" type="url" placeholder="Вставте посилання на лот Copart" />
+        <button type="button" id="lotBtn">Заповнити</button>
+      </div>
+      <div id="lotInfo" class="lotinfo"><p class="note">Працює тільки для посилань Copart. Рік, паливо й локація беруться з посилання. Об'єм двигуна введіть вручну.</p></div>
+    </section>
+
+    <!-- ВВІД ДАНИХ -->
+    <section class="card form">
+      <h2>Параметри авто</h2>
+
+      <div class="field">
+        <span class="label">Аукціон</span>
+        <div class="segmented" id="auctionSeg" role="radiogroup" aria-label="Аукціон">
+          <button type="button" role="radio" data-value="copart" class="on">Copart</button>
+          <button type="button" role="radio" data-value="iaai">IAAI</button>
+          <button type="button" role="radio" data-value="manheim">Manheim</button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span class="label">Локація відправлення</span>
+        <select id="siteName"></select>
+      </label>
+
+      <label class="field">
+        <span class="label">Вартість покупки</span>
+        <div class="input-wrap"><span class="prefix">$</span>
+          <input id="carPrice" type="number" inputmode="decimal" min="0" step="100" value="10000" /></div>
+      </label>
+
+      <div class="field">
+        <span class="label">Тип палива</span>
+        <div class="segmented" id="fuelSeg" role="radiogroup" aria-label="Тип палива">
+          <button type="button" role="radio" data-value="petrol" class="on">Бензин</button>
+          <button type="button" role="radio" data-value="hybrid">Гібрид</button>
+          <button type="button" role="radio" data-value="electric">Електро</button>
+          <button type="button" role="radio" data-value="diesel">Дизель</button>
+        </div>
+      </div>
+
+      <div class="row2">
+        <label class="field">
+          <span class="label">Рік випуску</span>
+          <select id="carYear"></select>
+        </label>
+        <label class="field" id="volumeField">
+          <span class="label">Об'єм двигуна, см³</span>
+          <input id="engineVolume" type="number" inputmode="numeric" min="0" step="100" value="2000" />
+        </label>
+        <label class="field hidden" id="batteryField">
+          <span class="label">Батарея, kWh</span>
+          <input id="batteryKwh" type="number" inputmode="decimal" min="0" step="1" value="60" />
+        </label>
+      </div>
+
+      <div class="row2">
+        <label class="field">
+          <span class="label">Доставка в</span>
+          <select id="destination">
+            <option value="lviv">Львів</option>
+            <option value="kyiv" selected>Київ</option>
+          </select>
+        </label>
+        <div class="field bus-field">
+          <label class="switch-row">
+            <span>Бус</span>
+            <span class="switch"><input id="bus" type="checkbox" /><span class="slider"></span></span>
+          </label>
+        </div>
+      </div>
+
+      <label class="field repair">
+        <span class="label">Ремонт <em>вручну, додається до суми</em></span>
+        <div class="input-wrap"><span class="prefix">$</span>
+          <input id="repair" type="number" inputmode="decimal" min="0" step="50" value="0" placeholder="0" /></div>
+      </label>
+    </section>
+
+    <!-- РЕЗУЛЬТАТ -->
+    <aside class="card result">
+      <h2>Розрахунок</h2>
+      <dl id="rows" class="rows"></dl>
+
+      <details class="customs" id="customsBox">
+        <summary>Розмитнення: <b id="customsTotal">0</b><span class="chev"></span></summary>
+        <dl class="rows small">
+          <div><dt>Мито</dt><dd id="duty">0</dd></div>
+          <div><dt>ПДВ</dt><dd id="vat">0</dd></div>
+          <div><dt>Акциз</dt><dd id="excise">0</dd></div>
+        </dl>
+      </details>
+
+      <div class="total">
+        <span>Загальна сума</span>
+        <strong id="total">$0</strong>
+      </div>
+      <button type="button" class="copy-btn" data-copy="ua">Копіювати розрахунок</button>
+      <p class="note" id="rateNote"></p>
+    </aside>
+  </main>
+
+  <!-- ЄВРОПА (Calculator Eu): доставка в Краків -->
+  <main class="layout" id="euView" hidden>
+    <section class="card form">
+      <h2>Параметри авто · Європа</h2>
+      <div class="field">
+        <span class="label">Аукціон</span>
+        <div class="segmented" id="euAuctionSeg" role="radiogroup" aria-label="Аукціон">
+          <button type="button" role="radio" data-value="copart" class="on">Copart</button>
+          <button type="button" role="radio" data-value="iaai">IAAI</button>
+          <button type="button" role="radio" data-value="manheim">Manheim</button>
+        </div>
+      </div>
+      <label class="field">
+        <span class="label">Локація відправлення</span>
+        <select id="euSite"></select>
+      </label>
+      <label class="field">
+        <span class="label">Вартість покупки</span>
+        <div class="input-wrap"><span class="prefix">$</span>
+          <input id="euPrice" type="number" inputmode="decimal" min="0" step="100" value="10000" /></div>
+      </label>
+      <label class="field">
+        <span class="label">Об'єм двигуна, л <em>для орієнтовного акцизу</em></span>
+        <input id="euVolume" type="number" inputmode="decimal" min="0" step="0.1" value="2.0" />
+      </label>
+      <label class="field repair">
+        <span class="label">Ремонт <em>вручну, додається до суми</em></span>
+        <div class="input-wrap"><span class="prefix">$</span>
+          <input id="euRepair" type="number" inputmode="decimal" min="0" step="50" value="0" placeholder="0" /></div>
+      </label>
+      <label class="field">
+        <span class="label">Курс EUR → USD</span>
+        <input id="euRate" type="number" inputmode="decimal" min="0.5" step="0.01" value="1.08" />
+        <small class="note" id="euRateInfo">Офіційний курс Польщі (NBP): завантаження…</small>
+      </label>
+    </section>
+
+    <aside class="card result">
+      <h2>Розрахунок · Європа</h2>
+      <dl id="euRows" class="rows"></dl>
+      <details class="customs" id="euCustoms" open>
+        <summary>Розмитнення: <b id="euCustomsTotal">0</b><span class="chev"></span></summary>
+        <dl class="rows small">
+          <div><dt>Ввізне мито (10%)</dt><dd id="euDuty">0</dd></div>
+          <div><dt>ПДВ (21%)</dt><dd id="euVat">0</dd></div>
+        </dl>
+      </details>
+      <div class="excise-box">
+        <div class="excise-head"><span>Акциз</span><em class="badge">Орієнтовний</em></div>
+        <strong id="euExcise">—</strong>
+        <p id="euExciseNote">Рахується від об'єму двигуна: 3.1% до 2.0 л, 18.6% понад 2.0 л, від митної вартості з митом. Сплачує клієнт при реєстрації в Польщі, у загальну суму не входить.</p>
+      </div>
+      <div class="total">
+        <span>Загальна сума</span>
+        <strong id="euTotal">$0</strong>
+      </div>
+      <button type="button" class="copy-btn" data-copy="eu">Копіювати розрахунок</button>
+    </aside>
+  </main>
+
+  <footer class="foot">Urban Auto · розрахунок орієнтовний</footer>
+
+  <script src="js/data/copart-data.js"></script>
+  <script src="js/data/iaai-data.js"></script>
+  <script src="js/data/manheim-data.js"></script>
+  <script src="js/data/copart-aliases.js"></script>
+  <script src="js/data/eu-copart-data.js"></script>
+  <script src="js/data/eu-iaai-data.js"></script>
+  <script src="js/data/eu-manheim-data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/lot.js"></script>
+  <script src="js/eu.js"></script>
+  <script src="js/copy.js"></script>
+  <script src="js/snow.js"></script>
+</body>
+</html>
