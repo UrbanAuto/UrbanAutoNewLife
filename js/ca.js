@@ -39,8 +39,8 @@ function caYardsFor(hub) {
 }
 
 /* Повний розрахунок (чиста функція — без DOM). Усі суми в USD. */
-function calcCaBreakdown({ auction, hub, yard, price, fuel, year, volume, kwh, bus, extra, repair, eurUsd }) {
-  price = num(price); repair = num(repair); extra = num(extra);
+function calcCaBreakdown({ auction, hub, yard, price, fuel, year, volume, kwh, bus, repair, eurUsd }) {
+  price = num(price); repair = num(repair);
   const hybridOrEv = fuel === 'hybrid' || fuel === 'electric';
   const auctionFee = caAuctionFee(auction, price);
   const land = yard ? num(yard.sedan) : 0;
@@ -65,8 +65,8 @@ function calcCaBreakdown({ auction, hub, yard, price, fuel, year, volume, kwh, b
 
   // «Логістика» одним рядком: суша + море + Material Fee + комісія CargoPlus + $1100 (+ надбавка Hybrid/Electro; Бус уже в морі й комплексі)
   const logistics = land + sea + CA_MATERIAL_FEE + CA_COMMISSION + complex + hazard;
-  const total = price + auctionFee + logistics + swiftFee + insuranceFee + caTax + CA_TITLE + SERVICE_FEE + extra + customs + repair;
-  return { price, repair, extra, auctionFee, land, sea, complex, logistics, swiftFee, insuranceFee, caTax, taxPct, hazard, customs, duty, vat, excise, total };
+  const total = price + auctionFee + logistics + swiftFee + insuranceFee + caTax + CA_TITLE + SERVICE_FEE + customs + repair;
+  return { price, repair, auctionFee, land, sea, complex, logistics, swiftFee, insuranceFee, caTax, taxPct, hazard, customs, duty, vat, excise, total };
 }
 
 function caFillYears() {
@@ -88,7 +88,7 @@ function calcCa() {
   const yard = caYardsFor(caState.hub).find((y) => y.n === $('caYard').value) || null;
   const r = calcCaBreakdown({
     auction: caState.auction, hub: caState.hub, yard, price: $('caPrice').value, fuel: caState.fuel, year: $('caYear').value,
-    volume: $('caVolume').value, kwh: $('caBattery').value, bus: $('caBus').checked, extra: $('caExtra').value,
+    volume: $('caVolume').value, kwh: $('caBattery').value, bus: $('caBus').checked,
     repair: $('caRepair').value, eurUsd: euroToUsd,
   });
   const bus = $('caBus').checked;
@@ -104,7 +104,6 @@ function calcCa() {
     ['Розмитнення', r.customs],
     ['Ремонт', r.repair],
   ];
-  if (r.extra) rows.splice(rows.length - 1, 0, ['Додаткова комісія / послуги', r.extra]);
   $('caRows').innerHTML = rows.map(() => '<div><dt></dt><dd></dd></div>').join('');
   [...$('caRows').children].forEach((row, i) => { row.children[0].textContent = rows[i][0]; row.children[1].textContent = usd(rows[i][1]); });
   $('caDuty').textContent = usd(r.duty);
@@ -116,7 +115,6 @@ function calcCa() {
   window.copyCa = { total: r.total, lines: [
     ['Ставка', r.price], ['Аукціонний збір', r.auctionFee], ['SWIFT', r.swiftFee], ['Страхування', r.insuranceFee],
     ['Податок Канади', r.caTax], ['Тайтл', CA_TITLE], ['Фрахт', r.logistics], ['Послуга', SERVICE_FEE],
-    ...(r.extra ? [['Додаткова комісія / послуги', r.extra]] : []),
     ['Митниця (мита + акциз + ПДВ)', r.customs], ['Ремонт', r.repair],
   ] };
 }
@@ -136,7 +134,7 @@ caSegmented('caFuelSeg', 'fuel', () => {
   const e = caState.fuel === 'electric';
   $('caVolumeField').classList.toggle('hidden', e); $('caBatteryField').classList.toggle('hidden', !e);
 });
-['caYard', 'caPrice', 'caYear', 'caVolume', 'caBattery', 'caBus', 'caExtra', 'caRepair'].forEach((id) => {
+['caYard', 'caPrice', 'caYear', 'caVolume', 'caBattery', 'caBus', 'caRepair'].forEach((id) => {
   $(id).addEventListener('input', calcCa); $(id).addEventListener('change', calcCa);
 });
 
