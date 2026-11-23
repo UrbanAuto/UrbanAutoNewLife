@@ -141,12 +141,12 @@ $('euAuctionSeg').addEventListener('click', (ev) => {
 
 /* Перемикач Україна / Європа (вибір запам'ятовується) */
 function setMode(mode) {
-  const eu = mode === 'eu';
+  const eu = mode === 'eu', ca = mode === 'ca';
   $('modeSwitch').querySelectorAll('button').forEach((x) => {
     const on = x.dataset.mode === mode; x.classList.toggle('on', on); x.setAttribute('aria-selected', on);
   });
-  $('uaView').hidden = eu; $('euView').hidden = !eu;
-  document.title = eu ? 'Urban Auto — Європа' : 'Urban Auto — Калькулятор авто з США';
+  $('uaView').hidden = eu || ca; $('euView').hidden = !eu; $('caView').hidden = !ca;
+  document.title = eu ? 'Urban Auto — Європа' : ca ? 'Urban Auto — Канада' : 'Urban Auto — Калькулятор авто з США';
   try { localStorage.setItem('ua-mode', mode); } catch (e) { /* ігноруємо */ }
 }
 $('modeSwitch').addEventListener('click', (ev) => {
@@ -154,4 +154,4 @@ $('modeSwitch').addEventListener('click', (ev) => {
 });
 
 fillEuSites(); calcEu(); fetchNbp();
-try { if (localStorage.getItem('ua-mode') === 'eu') setMode('eu'); } catch (e) { /* ігноруємо */ }
+try { const m = localStorage.getItem('ua-mode'); if (m === 'eu' || m === 'ca') setMode(m); } catch (e) { /* ігноруємо */ }
