@@ -37,7 +37,7 @@ async function copyText(text) {
 
 document.addEventListener('click', async (ev) => {
   const btn = ev.target.closest('.copy-btn'); if (!btn) return;
-  const data = btn.dataset.copy === 'ca' ? window.copyCa : btn.dataset.copy === 'eu' ? { ...window.copyEu, car: window.currentLotEu } : { ...window.copyUa, car: window.currentLot };
+  const data = btn.dataset.copy === 'ca' ? { ...window.copyCa, car: window.currentLotCa } : btn.dataset.copy === 'eu' ? { ...window.copyEu, car: window.currentLotEu } : { ...window.copyUa, car: window.currentLot };
   if (!data || !data.lines) return;
   const ok = await copyText(buildCopyText(data));
   const old = btn.dataset.label || (btn.dataset.label = btn.textContent);
