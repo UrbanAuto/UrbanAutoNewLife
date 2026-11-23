@@ -145,6 +145,60 @@ $('auctionSeg').addEventListener('click', () => { if (!applying && window.curren
 // Поле посилання очищено вручну → прибираємо картку
 $('lotUrl').addEventListener('input', () => { if (!$('lotUrl').value.trim()) { hideBanner(); $('lotInfo').innerHTML = LOT_HINT; } });
 
+/* ---------- Те саме для Європи: посилання → аукціон і локація відправлення ---------- */
+const EU_LOT_HINT = '<p class="note">Працює тільки для посилань Copart. Аукціон і локація беруться з посилання. Вартість покупки й об\'єм двигуна введіть вручну.</p>';
+let applyingEu = false;
+window.currentLotEu = null;
+
+function clearLotEu(reason) {
+  $('euLotUrl').value = '';
+  window.currentLotEu = null;
+  $('euLotInfo').innerHTML = reason
+    ? `<ul class="chips"><li class="warn"><b>Посилання скинуто</b><em>${reason}</em></li></ul>` + EU_LOT_HINT
+    : EU_LOT_HINT;
+}
+
+function applyLotEu() {
+  const info = $('euLotInfo');
+  const p = parseLotUrl($('euLotUrl').value);
+  if (!p) {
+    window.currentLotEu = null;
+    info.innerHTML = '<ul class="chips"><li class="warn"><b>Не вдалося розпізнати посилання.</b>' +
+      '<em>Потрібен вигляд copart.com/lot/12345678/…</em></li></ul>';
+    return;
+  }
+  applyingEu = true;   // програмні зміни полів не повинні скидати посилання
+  document.querySelector(`#euAuctionSeg [data-value="${p.auction}"]`).click();
+  const opt = p.site && [...$('euSite').options].find((o) => o.value === p.site);
+  if (opt) { $('euSite').value = p.site; flash($('euSite')); }
+  applyingEu = false;
+  calcEu();
+
+  if (!p.slug) {
+    window.currentLotEu = null;
+    info.innerHTML = '<ul class="chips">' + chip('Лот', p.lot, true) +
+      chip('Дані авто', 'немає в посиланні', false, 'У посиланні IAAI немає опису — оберіть локацію вручну') + '</ul>';
+    return;
+  }
+  window.currentLotEu = { title: titleCase(p.title || `Лот ${p.lot}`), lot: p.lot, site: opt ? p.site : null, fuel: FUEL_UA[p.fuel], url: $('euLotUrl').value.trim() };
+  info.innerHTML = '<ul class="chips">' +
+    chip('Лот', p.lot, true) +
+    chip('Авто', p.title || '—', !!p.title) +
+    chip('Рік', p.year || '—', !!p.year, p.year ? '' : 'Не вказано в посиланні') +
+    chip('Паливо', FUEL_UA[p.fuel], true, 'Визначено за назвою — для акцизу введіть об\'єм вручну') +
+    chip('Локація', opt ? p.site : (p.siteHint ? p.siteHint.toUpperCase() : '—'), !!opt, opt ? '' : 'Не знайдено в списку — оберіть вручну') +
+    chip('Ціна й об\'єм двигуна', 'вручну', false, 'Немає в посиланні') +
+    '</ul>';
+}
+
+// Користувач вручну змінив локацію або аукціон → посилання вже не відповідає авто, скидаємо його
+$('euSite').addEventListener('change', () => { if (!applyingEu && window.currentLotEu) clearLotEu('Ви змінили локацію'); });
+$('euAuctionSeg').addEventListener('click', () => { if (!applyingEu && window.currentLotEu) clearLotEu('Ви змінили аукціон'); });
+$('euLotUrl').addEventListener('input', () => { if (!$('euLotUrl').value.trim()) { window.currentLotEu = null; $('euLotInfo').innerHTML = EU_LOT_HINT; } });
+$('euLotBtn').addEventListener('click', applyLotEu);
+$('euLotUrl').addEventListener('keydown', (e) => { if (e.key === 'Enter') applyLotEu(); });
+$('euLotUrl').addEventListener('paste', () => setTimeout(applyLotEu, 0));
+
 $('lotBtn').addEventListener('click', applyLot);
 $('lotUrl').addEventListener('keydown', (e) => { if (e.key === 'Enter') applyLot(); });
 $('lotUrl').addEventListener('paste', () => setTimeout(applyLot, 0));
