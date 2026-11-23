@@ -16,7 +16,6 @@ const CA_IMPACT_EXTRA = 65;
 const CA_SEA = { Toronto: 1200, Vancouver: 1600 };           // SEDAN
 const CA_SEA_HYBRID = { Toronto: 200, Vancouver: 300 };      // додається для Hybrid/Electro
 const caState = { auction: 'copart', hub: 'Toronto', fuel: 'petrol' };
-let caCadUsd = 0;
 
 /* Аукціонний збір за таблицями CargoPlus. Від $15 000: ціна × 6% + збір з рядка «15000+» (як у CargoPlus). */
 function caAuctionFee(auction, price) {
@@ -147,16 +146,4 @@ $('caCadRate').addEventListener('input', () => { caUsdToCad(); calcCa(); });
   $(id).addEventListener('input', calcCa); $(id).addEventListener('change', calcCa);
 });
 
-/* Курс НБУ: CAD → USD — довідково (для переведення ціни лота) */
-async function caFetchRates() {
-  try {
-    const r = await fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json');
-    if (!r.ok) return;
-    const d = await r.json(), rate = (cc) => d.find((x) => x.cc === cc)?.rate;
-    if (rate('CAD') && rate('USD')) caCadUsd = rate('CAD') / rate('USD');
-    $('caRateNote').textContent = (caCadUsd ? `Курси НБУ: 1 CAD = ${caCadUsd.toFixed(4)} USD · 1 EUR = ${euroToUsd.toFixed(4)} USD` : '');
-    calcCa();
-  } catch { $('caRateNote').textContent = 'Курси НБУ недоступні — використовуються запасні значення.'; }
-}
-
-caFillYears(); caFillYards(); calcCa(); caFetchRates();
+caFillYears(); caFillYards(); calcCa();
