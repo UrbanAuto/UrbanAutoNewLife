@@ -39,6 +39,7 @@ select option { background: #0e274f; color: #ecf3ff; }
 .input-wrap { position: relative; }
 .input-wrap .prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 700; }
 .input-wrap input { padding-left: 30px; }
+.input-wrap.wide input { padding-left: 44px; }   /* двосимвольний префікс (C$) */
 
 .segmented { display: flex; gap: 4px; padding: 4px; background: var(--bg); border-radius: 12px; }
 .segmented button { flex: 1; height: 38px; border: 0; border-radius: 9px; background: transparent; color: var(--muted);
