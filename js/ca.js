@@ -134,6 +134,15 @@ caSegmented('caFuelSeg', 'fuel', () => {
   const e = caState.fuel === 'electric';
   $('caVolumeField').classList.toggle('hidden', e); $('caBatteryField').classList.toggle('hidden', !e);
 });
+/* Ставка в CAD ↔ вартість покупки в USD за курсом (за замовчуванням 1.3 CAD за $1): змінили одне поле — друге перераховується */
+const CA_DEFAULT_RATE = 1.3;
+const caRate = () => { const r = Number($('caCadRate').value); return Number.isFinite(r) && r > 0 ? r : CA_DEFAULT_RATE; };
+const caRound2 = (v) => Math.round(v * 100) / 100;
+function caUsdToCad() { $('caCad').value = num($('caPrice').value) ? String(caRound2(num($('caPrice').value) * caRate())) : ''; }
+$('caCad').addEventListener('input', () => { $('caPrice').value = num($('caCad').value) ? String(caRound2(num($('caCad').value) / caRate())) : ''; calcCa(); });
+$('caPrice').addEventListener('input', caUsdToCad);
+$('caCadRate').addEventListener('input', () => { caUsdToCad(); calcCa(); });
+
 ['caYard', 'caPrice', 'caYear', 'caVolume', 'caBattery', 'caBus', 'caRepair'].forEach((id) => {
   $(id).addEventListener('input', calcCa); $(id).addEventListener('change', calcCa);
 });
