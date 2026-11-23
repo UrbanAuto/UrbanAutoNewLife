@@ -2,12 +2,12 @@
  *   аукціонний збір (таблиці Copart/IAAI, завжди LiveBid; Impact = IAAI + $65), «суша» від майданчика до хабу (Toronto/Vancouver),
  *   морський фрахт хаб → Клайпеда, Material Fee $25, провінційний податок Канади, тайтл $150, комісія $50, розмитнення
  *   (мито 10%, акциз, ПДВ 20% від (вартість + збір + $1800 + мито + акциз)), .
- * «Логістика» (одним рядком) = суша + море + Material Fee $25 + комісія CargoPlus $50 + $1100 (експедитор $300 + брокер $100 + доставка до Львова $700) + $55 для Hybrid/Electro.
+ * «Логістика» (одним рядком) = суша + море + Material Fee $25 + комісія CargoPlus $50 + $1100 (просто надбавка до логістики) + $55 для Hybrid/Electro.
  * «Послуга компанії» — фіксовані $500 (SERVICE_FEE), як в Україні.
- * Тільки SEDAN. «Бус» — як в українському калькуляторі: +$1500 до фрахту, +$300 до комплексу.
+ * Тільки SEDAN. «Бус» — як в українському калькуляторі: +$1500 до фрахту й +$300; обидві суми входять у «Логістику».
  * SWIFT і страхування — РІВНО як в українському калькуляторі (SWIFT = (ціна + збір) × 2.5% + $100; страхування = ціна × 1% + $150).
  * Акциз і коефіцієнт віку — ті самі функції, що в українському калькуляторі (збігаються з CargoPlus). */
-const CA_COMPLEX = 1100;                 // експедитор 300 + брокер 100 + доставка до Львова/Рівного 700
+const CA_LOGISTICS_ADDON = 1100;         // фіксована надбавка до суми логістики (ні до чого більше не прив'язана)
 const CA_HAZARD = 55;                    // надбавка експедитора для Hybrid/Electro (як у CargoPlus)
 const CA_TITLE = 150;                    // переробка тайтлу (Export)
 const CA_MATERIAL_FEE = 25;              // Material Fee (CargoPlus)
@@ -45,7 +45,7 @@ function calcCaBreakdown({ auction, hub, yard, price, fuel, year, volume, kwh, b
   const auctionFee = caAuctionFee(auction, price);
   const land = yard ? num(yard.sedan) : 0;
   const sea = num(CA_SEA[hub]) + (hybridOrEv ? num(CA_SEA_HYBRID[hub]) : 0) + (bus ? BUS_FREIGHT_EXTRA : 0);   // Бус: +$1500 до фрахту (як в Україні)
-  const complex = CA_COMPLEX + (bus ? BUS_COMPLEX_EXTRA : 0);                                                  // Бус: +$300 до комплексу
+  const addon = CA_LOGISTICS_ADDON + (bus ? BUS_COMPLEX_EXTRA : 0);                                             // Бус: +$300 (як в Україні)
   const hazard = hybridOrEv ? CA_HAZARD : 0;
   const priceAndAuction = price + auctionFee;
   const customsValue = priceAndAuction + 1800;
@@ -63,10 +63,10 @@ function calcCaBreakdown({ auction, hub, yard, price, fuel, year, volume, kwh, b
   const taxPct = yard ? yard.t : 0;
   const caTax = priceAndAuction * taxPct;
 
-  // «Логістика» одним рядком: суша + море + Material Fee + комісія CargoPlus + $1100 (+ надбавка Hybrid/Electro; Бус уже в морі й комплексі)
-  const logistics = land + sea + CA_MATERIAL_FEE + CA_COMMISSION + complex + hazard;
+  // «Логістика» одним рядком: суша + море + Material Fee + комісія CargoPlus + $1100 (+ $55 Hybrid/Electro; Бус: +$1500 у море й +$300)
+  const logistics = land + sea + CA_MATERIAL_FEE + CA_COMMISSION + addon + hazard;
   const total = price + auctionFee + logistics + swiftFee + insuranceFee + caTax + CA_TITLE + SERVICE_FEE + customs + repair;
-  return { price, repair, auctionFee, land, sea, complex, logistics, swiftFee, insuranceFee, caTax, taxPct, hazard, customs, duty, vat, excise, total };
+  return { price, repair, auctionFee, land, sea, addon, logistics, swiftFee, insuranceFee, caTax, taxPct, hazard, customs, duty, vat, excise, total };
 }
 
 function caFillYears() {
