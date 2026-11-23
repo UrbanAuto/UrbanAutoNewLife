@@ -2,7 +2,8 @@
  *   аукціонний збір (таблиці Copart/IAAI, завжди LiveBid; Impact = IAAI + $65), «суша» від майданчика до хабу (Toronto/Vancouver),
  *   морський фрахт хаб → Клайпеда, Material Fee $25, провінційний податок Канади, тайтл $150, комісія $50, розмитнення
  *   (мито 10%, акциз, ПДВ 20% від (вартість + збір + $1800 + мито + акциз)), .
- * Експедитор $300 + брокер $100 + доставка до Львова/Рівного $700 = $1100 (одним рядком).
+ * «Логістика» (одним рядком) = суша + море + Material Fee $25 + комісія CargoPlus $50 + $1100 (експедитор $300 + брокер $100 + доставка до Львова $700) + $55 для Hybrid/Electro.
+ * «Послуга компанії» — фіксовані $500 (SERVICE_FEE), як в Україні.
  * Тільки SEDAN. «Бус» — як в українському калькуляторі: +$1500 до фрахту, +$300 до комплексу.
  * SWIFT і страхування — РІВНО як в українському калькуляторі (SWIFT = (ціна + збір) × 2.5% + $100; страхування = ціна × 1% + $150).
  * Акциз і коефіцієнт віку — ті самі функції, що в українському калькуляторі (збігаються з CargoPlus). */
@@ -62,8 +63,10 @@ function calcCaBreakdown({ auction, hub, yard, price, fuel, year, volume, kwh, b
   const taxPct = yard ? yard.t : 0;
   const caTax = priceAndAuction * taxPct;
 
-  const total = price + auctionFee + land + sea + swiftFee + insuranceFee + caTax + CA_TITLE + hazard + complex + CA_MATERIAL_FEE + CA_COMMISSION + extra + customs + repair;
-  return { price, repair, extra, auctionFee, land, sea, complex, swiftFee, insuranceFee, caTax, taxPct, hazard, customs, duty, vat, excise, total };
+  // «Логістика» одним рядком: суша + море + Material Fee + комісія CargoPlus + $1100 (+ надбавка Hybrid/Electro; Бус уже в морі й комплексі)
+  const logistics = land + sea + CA_MATERIAL_FEE + CA_COMMISSION + complex + hazard;
+  const total = price + auctionFee + logistics + swiftFee + insuranceFee + caTax + CA_TITLE + SERVICE_FEE + extra + customs + repair;
+  return { price, repair, extra, auctionFee, land, sea, complex, logistics, swiftFee, insuranceFee, caTax, taxPct, hazard, customs, duty, vat, excise, total };
 }
 
 function caFillYears() {
@@ -92,18 +95,15 @@ function calcCa() {
   const rows = [
     ['Вартість покупки', r.price],
     ['Аукціонний збір', r.auctionFee],
-    [bus ? 'Логістика (Бус)' : 'Логістика', r.land + r.sea],
+    [bus ? 'Логістика (Бус)' : 'Логістика', r.logistics],
     ['SWIFT', r.swiftFee],
     ['Страхування', r.insuranceFee],
     [`Податок Канади${r.taxPct ? ` (${+(r.taxPct * 100).toFixed(3)}%)` : ''}`, r.caTax],
     ['Тайтл (Export)', CA_TITLE],
-    ['Material Fee', CA_MATERIAL_FEE],
-    ['Експедитор, брокер, доставка до Львова', r.complex],
-    ['Комісія', CA_COMMISSION],
+    ['Послуга компанії', SERVICE_FEE],
     ['Розмитнення', r.customs],
     ['Ремонт', r.repair],
   ];
-  if (r.hazard) rows.splice(8, 0, ['Небезпечний вантаж (Hybrid/Electro)', r.hazard]);
   if (r.extra) rows.splice(rows.length - 1, 0, ['Додаткова комісія / послуги', r.extra]);
   $('caRows').innerHTML = rows.map(() => '<div><dt></dt><dd></dd></div>').join('');
   [...$('caRows').children].forEach((row, i) => { row.children[0].textContent = rows[i][0]; row.children[1].textContent = usd(rows[i][1]); });
@@ -114,9 +114,9 @@ function calcCa() {
   $('caTotal').textContent = usd(r.total);
 
   window.copyCa = { total: r.total, lines: [
-    ['Ставка', r.price], ['Аукціонний збір', r.auctionFee], ['Фрахт', r.land + r.sea], ['SWIFT', r.swiftFee], ['Страхування', r.insuranceFee],
-    ['Податок Канади', r.caTax], ['Тайтл', CA_TITLE], ['Material Fee', CA_MATERIAL_FEE], ...(r.hazard ? [['Небезпечний вантаж', r.hazard]] : []),
-    ['Експедитор, брокер, доставка', r.complex], ['Комісія', CA_COMMISSION], ...(r.extra ? [['Додаткова комісія / послуги', r.extra]] : []),
+    ['Ставка', r.price], ['Аукціонний збір', r.auctionFee], ['SWIFT', r.swiftFee], ['Страхування', r.insuranceFee],
+    ['Податок Канади', r.caTax], ['Тайтл', CA_TITLE], ['Фрахт', r.logistics], ['Послуга', SERVICE_FEE],
+    ...(r.extra ? [['Додаткова комісія / послуги', r.extra]] : []),
     ['Митниця (мита + акциз + ПДВ)', r.customs], ['Ремонт', r.repair],
   ] };
 }
