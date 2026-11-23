@@ -92,8 +92,7 @@ function calcCa() {
   const rows = [
     ['Вартість покупки', r.price],
     ['Аукціонний збір', r.auctionFee],
-    [`Суша: ${yard ? yard.n : '—'} → ${caState.hub}`, r.land],
-    [`Море${bus ? ' (Бус)' : ''}: ${caState.hub} → Клайпеда`, r.sea],
+    [bus ? 'Логістика (Бус)' : 'Логістика', r.land + r.sea],
     ['SWIFT', r.swiftFee],
     ['Страхування', r.insuranceFee],
     [`Податок Канади${r.taxPct ? ` (${+(r.taxPct * 100).toFixed(3)}%)` : ''}`, r.caTax],
@@ -104,7 +103,7 @@ function calcCa() {
     ['Розмитнення', r.customs],
     ['Ремонт', r.repair],
   ];
-  if (r.hazard) rows.splice(9, 0, ['Небезпечний вантаж (Hybrid/Electro)', r.hazard]);
+  if (r.hazard) rows.splice(8, 0, ['Небезпечний вантаж (Hybrid/Electro)', r.hazard]);
   if (r.extra) rows.splice(rows.length - 1, 0, ['Додаткова комісія / послуги', r.extra]);
   $('caRows').innerHTML = rows.map(() => '<div><dt></dt><dd></dd></div>').join('');
   [...$('caRows').children].forEach((row, i) => { row.children[0].textContent = rows[i][0]; row.children[1].textContent = usd(rows[i][1]); });
@@ -115,7 +114,7 @@ function calcCa() {
   $('caTotal').textContent = usd(r.total);
 
   window.copyCa = { total: r.total, lines: [
-    ['Ставка', r.price], ['Аукціонний збір', r.auctionFee], ['Суша', r.land], ['Море', r.sea], ['SWIFT', r.swiftFee], ['Страхування', r.insuranceFee],
+    ['Ставка', r.price], ['Аукціонний збір', r.auctionFee], ['Фрахт', r.land + r.sea], ['SWIFT', r.swiftFee], ['Страхування', r.insuranceFee],
     ['Податок Канади', r.caTax], ['Тайтл', CA_TITLE], ['Material Fee', CA_MATERIAL_FEE], ...(r.hazard ? [['Небезпечний вантаж', r.hazard]] : []),
     ['Експедитор, брокер, доставка', r.complex], ['Комісія', CA_COMMISSION], ...(r.extra ? [['Додаткова комісія / послуги', r.extra]] : []),
     ['Митниця (мита + акциз + ПДВ)', r.customs], ['Ремонт', r.repair],
